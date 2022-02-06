@@ -3,8 +3,8 @@
 This repository contains diffrent Json Interceptors, which can be useful when working with Json. 
 
 - EnumMember
-- EnumSet
-- ColorInterceptor
+- TEnumSet
+- TColorInterceptor
 
 ## EnumMember
 
@@ -165,3 +165,58 @@ begin
   inherited Create(ctString, rtString, TSubscriptionPollingStatusInterceptor, nil, True);
 end;
 ```
+## EnumSet
+
+### What is a set?
+
+Sets are another way in which Delphi is set apart from other languages. Whereas enumerations allow a variable to have one, and only one, value from a fixed number of values, sets allow you to have any combination of the given values - none, 1, some, or all.
+
+An example: 
+```delphi
+Type
+  TEnum = (One, Two, Three);
+  TEnumSet = set of TEnum;
+```
+
+With TEnumSetInterceptor you can do json-serialization and deserialization if a set. Like enumerations you can not decorate the set type definition with attributes, so again we have to put the attribute on an Interceptor.
+
+```Delphi
+type
+  TEnum = (One, Two, Three);
+  TEnumSet = set of TEnum;
+
+  // If you want to use an other seperator, please do so :D
+  [SetMembers('One|Two|Three', '|')]
+  TEnumSetInterceptor = class(TSetInterceptor<TEnumSet>)
+  end;
+
+  TSetClass = class
+  private
+    [StringsHandler(TEnumSetInterceptor)]
+    FEnum: TEnumSet;
+  public
+    property Enum: TEnumSet read FEnum write FEnum;
+  end;
+```
+
+Example of use: 
+
+```delphi
+  var SetClass := TSetClass.Create;
+  SetClass.Enum := [TEnum.One, TEnum.Three];
+  var jsonString := TJson.ObjectToJsonString(SetClass);
+  WriteLn(jsonString);
+```
+
+And the generatedJson: 
+
+```Json
+{
+	"enum": [
+		"One",
+		"Three"
+	]
+}
+```
+
+Ofcause TEnumSetInterceptor supports both marshalling and unmarshalling.
