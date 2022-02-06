@@ -153,6 +153,7 @@ Finally if you prefer a cleaner syntax, you can ofcause create you own attribute
   TEnumClass = class
   private
     [PollingStatus]
+    FStatus: TSubscriptionPollingStatus;
   public
     property Status: TSubscriptionPollingStatus read FStatus write FStatus;
   end;
