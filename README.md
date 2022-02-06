@@ -220,3 +220,92 @@ And the generatedJson:
 ```
 
 Ofcause TEnumSetInterceptor supports both marshalling and unmarshalling.
+
+## TColorInterceptor
+
+TColorInterceptor is just a simple Interceptor for marshalling and unmarshalling a Color. 
+
+You can marshal from the following formats:
+
+```JSON
+{"color":"0x000000FF"}
+{"color":"$000000FF"}
+{"color":"clRed"}
+{"color":"Red"}
+```
+
+When unmarshalling you'll allways get the following format: 
+```JSON
+{"color":"0x000000FF"}
+```
+You can ofcause change that you self. Simply change the implementation of TColorInterceptor.StringConverter
+
+Current implementation:
+
+```Delphi
+function TColorInterceptor.StringConverter(Data: TObject; Field: string): string;
+var
+  Color: TColor;
+begin
+  Color := GetValue(Data, Field).AsInteger;
+  Result := '0x' + IntToHex(Color);
+end;
+```
+
+Example of use: 
+
+First we need a test class: 
+
+```Delphi
+unit ColorTestClass;
+
+interface
+
+uses
+  Json.Interceptors, System.UITypes;
+
+type
+  TColorClass = class
+  private
+    [StringHandler(TColorInterceptor)]
+    FColor: TColor;
+  public
+    property Color: TColor read FColor write FColor;
+  end;
+
+implementation
+
+end.
+```
+
+Then we need to call it:
+
+```Delphi
+program ColorDemo;
+
+{$APPTYPE CONSOLE}
+
+{$R *.res}
+
+
+uses
+  REST.Json, System.UITypes,
+  ColorTestClass in 'ColorTestClass.pas';
+
+begin
+  var  test := TColorClass.Create;
+  test.Color := TColors.Red;
+
+  // Marshal
+  var  jsonString := TJson.ObjectToJsonString(test);
+  Writeln(jsonString = '{"color":"0x000000FF"}');
+
+  // Unmarshal
+  var test2 := TJson.JsonToObject<TColorClass>(jsonString);
+  Writeln(test.Color = test2.Color);
+
+  test.Free;
+  test2.Free;
+  Readln;
+end.
+```
